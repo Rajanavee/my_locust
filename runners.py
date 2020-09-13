@@ -37,6 +37,7 @@ HEARTBEAT_LIVENESS = 3
 FALLBACK_INTERVAL = 5
 CMD_ID = 0
 COMMAND = ""
+INDEX = 0
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
@@ -469,6 +470,7 @@ class MasterRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
+        self.client_index = 0
 
         class WorkerNodesDict(dict):
             def get_by_state(self, state):
@@ -543,7 +545,7 @@ class MasterRunner(DistributedRunner):
                 self.server.send_to_client(Message("cmd", command, client.id))
             
 
-    def start(self, user_count, hatch_rate):
+    def start(self, user_count, spawn_rate):
         self.target_user_count = user_count
         num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
         if not num_workers:
@@ -661,6 +663,8 @@ class MasterRunner(DistributedRunner):
                     "Client %r reported as ready. Currently %i clients ready to swarm."
                     % (id, len(self.clients.ready + self.clients.running + self.clients.spawning))
                 )
+                self.server.send_to_client(Message("index", self.client_index, id))
+                self.client_index += 1
                 if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
                     # balance the load distribution when new client joins
                     self.start(self.target_user_count, self.spawn_rate)
@@ -817,6 +821,10 @@ class WorkerRunner(DistributedRunner):
                 COMMAND = cmd
                 CMD_ID = CMD_ID+1               
                 print("get cmd : ",COMMAND)
+            elif msg.type == "index":
+                global INDEX
+                INDEX = msg.data
+                print("get indx : ",INDEX)
             elif msg.type == "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
