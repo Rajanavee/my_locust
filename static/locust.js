@@ -28,7 +28,6 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
-
 $("#new_test").click(function(event) {
     event.preventDefault();
     $("#start").show();
@@ -67,16 +66,16 @@ function setHostName(hostname) {
 
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
+    $("body").attr("class", "spawning");
+    $("#start").fadeOut();
+    $("#status").fadeIn();
+    $(".box_running").fadeIn();
+    $("a.new_test").fadeOut();
+    $("a.edit_test").fadeIn();
+    $(".user_count").fadeIn();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
-                $("body").attr("class", "hatching");
-                $("#start").fadeOut();
-                $("#status").fadeIn();
-                $(".box_running").fadeIn();
-                $("a.new_test").fadeOut();
-                $("a.edit_test").fadeIn();
-                $(".user_count").fadeIn();
                 setHostName(response.host);
             }
         }
@@ -88,7 +87,7 @@ $('#edit_form').submit(function(event) {
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
-                $("body").attr("class", "hatching");
+                $("body").attr("class", "spawning");
                 $("#edit").fadeOut();
                 setHostName(response.host);
             }
